@@ -1,0 +1,42 @@
+[
+    {
+        "line": 1,
+        "instruction": "LOAD_CONSTANT 0 50",
+        "binary": "1B000032"
+    },
+    {
+        "line": 2,
+        "instruction": "LOAD_CONSTANT 1 25",
+        "binary": "1B080019"
+    },
+    {
+        "line": 3,
+        "instruction": "LOAD_CONSTANT 2 75",
+        "binary": "1B10004B"
+    },
+    {
+        "line": 4,
+        "instruction": "LOAD_CONSTANT 3 50",
+        "binary": "1B180032"
+    },
+    {
+        "line": 5,
+        "instruction": "LOAD_CONSTANT 4 10",
+        "binary": "1B20000A"
+    },
+    {
+        "line": 6,
+        "instruction": "LOAD_MEMORY 1",
+        "binary": "0D080000"
+    },
+    {
+        "line": 7,
+        "instruction": ">",
+        "binary": "15000000"
+    },
+    {
+        "line": 8,
+        "instruction": "STORE_TO_MEMORY 0 1",
+        "binary": "0E000001"
+    }
+]

@@ -1,0 +1,22 @@
+[
+    {
+        "line": 1,
+        "instruction": "LOAD_CONSTANT 0 5",
+        "binary": "1B000005"
+    },
+    {
+        "line": 2,
+        "instruction": "LOAD_CONSTANT 1 3",
+        "binary": "1B080003"
+    },
+    {
+        "line": 3,
+        "instruction": ">",
+        "binary": "15000000"
+    },
+    {
+        "line": 4,
+        "instruction": "STORE_TO_MEMORY 0 1",
+        "binary": "0E000001"
+    }
+]
