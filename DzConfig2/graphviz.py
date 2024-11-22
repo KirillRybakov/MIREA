@@ -22,25 +22,68 @@ def parse_args():
     return parser.parse_args()
 
 
-def analyze_dependencies(package, depth, repo_url):
-    print(f"Получение зависимостей для пакета: {package}")
-    # Пример команды для получения зависимостей пакета
-
-    command = f"apt-cache depends {package}"
-    print(f"Выполнение команды: {command}")
-    subprocess.run(command, shell=True)
-
-
-def generate_mermaid_code(package, depth, repo_url):
-    print(f"Генерация графа зависимостей для пакета {package} с глубиной {depth} и репозиторием {repo_url}")
-
-    mermaid_code = f"""
-    graph TD
-          {package} --> dep1
-          dep1 --> dep2
-          dep2 --> dep3
+def get_package_dependencies(package_name):
     """
-    return mermaid_code
+    Получить зависимости для указанного пакета с помощью команды apt-cache.
+    """
+    try:
+        result = subprocess.run(
+            ["apt-cache", "depends", package_name],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            check=True
+        )
+        return result.stdout
+    except subprocess.CalledProcessError as e:
+        print(f"Ошибка при выполнении команды: {e.stderr}")
+        return ""
+
+
+def parse_dependencies(raw_dependencies):
+    """
+    Разобрать вывод команды apt-cache в формат зависимостей.
+    """
+    dependencies = []
+    for line in raw_dependencies.splitlines():
+        line = line.strip()
+        if line.startswith("Depends:"):
+            dep = line.split("Depends:")[1].strip()
+            # Убираем символы < >, чтобы не было синтаксических ошибок в Mermaid
+            dep = dep.replace('<', '').replace('>', '')
+            dependencies.append(dep)
+    return dependencies
+
+
+def build_dependency_graph(package_name, max_depth):
+    """
+    Построить граф зависимостей пакета в формате Mermaid с учётом глубины.
+    """
+    visited = set()  # Для отслеживания посещённых пакетов
+    edges = []  # Для хранения рёбер графа
+
+    def dfs(package, current_depth):
+        if current_depth > max_depth:
+            return
+        if package in visited:
+            return
+        visited.add(package)
+
+        raw_dependencies = get_package_dependencies(package)
+        dependencies = parse_dependencies(raw_dependencies)
+
+        for dep in dependencies:
+            edges.append((package, dep))
+            dfs(dep, current_depth + 1)
+
+    # Построение графа начиная с указанного пакета
+    dfs(package_name, 1)
+
+    # Генерация Mermaid-графа
+    mermaid = ["graph TD"]
+    for parent, child in edges:
+        mermaid.append(f"  {parent} --> {child}")
+    return "\n".join(mermaid)
 
 
 def visualize_graph(visualizer, mermaid_code):
@@ -57,12 +100,29 @@ def visualize_graph(visualizer, mermaid_code):
 def main():
     args = parse_args()
 
-    # Получаем зависимости и генерируем код Mermaid
-    analyze_dependencies(args.package, args.depth, args.repo)
-    mermaid_code = generate_mermaid_code(args.package, args.depth, args.repo)
+    package_name = args.package
+    print(f"Получение зависимостей для пакета: {package_name}")
 
-    # Визуализируем граф
-    visualize_graph(args.visualizer, mermaid_code)
+    try:
+        # Генерация графа зависимостей с учётом глубины
+        mermaid_code = build_dependency_graph(package_name, args.depth)
+
+        # Печать кода Mermaid в терминал
+        print("Сгенерированный код Mermaid:")
+        print(mermaid_code)
+
+        # Сохранение графа в файл
+        output_file = "graph.mmd"
+        with open(output_file, "w") as file:
+            file.write(mermaid_code)
+        print(f"Граф зависимостей сохранён в файле '{output_file}'.")
+        print("Откройте его в Mermaid Live Editor: https://mermaid-js.github.io/mermaid-live-editor/")
+
+        # Визуализируем граф
+        visualize_graph(args.visualizer, mermaid_code)
+
+    except Exception as e:
+        print(f"Произошла ошибка: {e}")
 
 
 if __name__ == "__main__":

@@ -64,6 +64,13 @@ class TestShellEmulator(unittest.TestCase):
         # Создание новой директории и проверка ее существования
         self.shell.mkdir("dir3")
         self.assertIn("./dir3", self.shell.file_system)
+
+    def test_mkdir_already_exists_as_directory(self):
+        # Попытка создания директории, которая уже существует
+        self.shell.mkdir("dir1")
+        output = self._capture_stdout(lambda: self.shell.mkdir("dir1"))
+        self.assertIn("Directory exists", output)
+
     #
     def test_mkdir_existing_directory(self):
         # Попытка создания существующей директории
@@ -100,15 +107,26 @@ class TestShellEmulator(unittest.TestCase):
         output = self._capture_stdout(lambda: self.shell.cat("nonexistent.txt"))
         self.assertIn("No such file or directory", output)
 
+    def test_cat_existing_file(self):
+        # Проверяем чтение существующего файла
+        output = self._capture_stdout(lambda: self.shell.cat("file1.txt"))
+        self.assertIn("Contents of file1.txt", output)  # Проверяем, что содержимое есть в выводе
+
     def test_head(self):
         # Чтение первых 10 строк файла (или меньше)
         output = self._capture_stdout(lambda: self.shell.head("file1.txt"))
-        self.assertIn("Contents of file1.txt", output)
+        self.assertIn("Contents of file1.txt", output.strip())
+
 
     def test_head_nonexistent_file(self):
         # Попытка чтения несуществующего файла
         output = self._capture_stdout(lambda: self.shell.head("nonexistent.txt"))
         self.assertIn("No such file or directory", output)
+
+    def test_head_with_line_limit(self):
+        # Пример: тест для head, проверяем, что выводится правильное содержимое
+        output = self._capture_stdout(lambda: self.shell.head("file1.txt"))
+        self.assertIn("Contents of file1.txt", output)  # Проверяем, что содержимое есть в выводе
 
     # Вспомогательный метод для захвата вывода функций
     def _capture_stdout(self, func):
@@ -132,3 +150,4 @@ class TestShellEmulator(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
